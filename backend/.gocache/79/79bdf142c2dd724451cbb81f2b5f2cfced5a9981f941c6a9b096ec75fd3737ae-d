@@ -1,0 +1,6 @@
+./audit_repo.go
+./inventory_repo.go
+./permission_repo.go
+./product_repo.go
+./role_repo.go
+./user_repo.go
