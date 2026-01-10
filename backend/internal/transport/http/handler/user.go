@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"backend/internal/transport/http/middleware"
 	usecaseuser "backend/internal/usecase/user"
 )
 
@@ -18,8 +19,8 @@ func NewUserHandler(uc *usecaseuser.Service) *UserHandler {
 }
 
 func (h *UserHandler) RegisterRoutes(rg *gin.RouterGroup) {
-	rg.POST("/users", h.create)
-	rg.GET("/users/:id", h.get)
+	rg.POST("/users", middleware.RequirePermission("user.write"), h.create)
+	rg.GET("/users/:id", middleware.RequirePermission("user.read"), h.get)
 }
 
 func (h *UserHandler) create(c *gin.Context) {

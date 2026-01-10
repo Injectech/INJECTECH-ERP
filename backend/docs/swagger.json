@@ -1,0 +1,652 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "ERP Backend API",
+    "version": "1.0.0",
+    "description": "REST API for ERP modules with JWT auth and RBAC."
+  },
+  "servers": [
+    { "url": "http://localhost:8080" }
+  ],
+  "tags": [
+    { "name": "health" },
+    { "name": "auth" },
+    { "name": "users" },
+    { "name": "roles" },
+    { "name": "permissions" },
+    { "name": "products" },
+    { "name": "inventory" },
+    { "name": "audit" }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["health"],
+        "summary": "Healthcheck",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BaseResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "tags": ["auth"],
+        "summary": "Register",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "$ref": "#/components/responses/AuthResponse" },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "500": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": ["auth"],
+        "summary": "Login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/AuthResponse" },
+          "401": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "tags": ["auth"],
+        "summary": "Refresh access token",
+        "description": "Uses refresh token stored in HttpOnly cookie.",
+        "responses": {
+          "200": { "$ref": "#/components/responses/AuthResponse" },
+          "401": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/users": {
+      "post": {
+        "tags": ["users"],
+        "summary": "Create user",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateUserRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "$ref": "#/components/responses/UserResponse" },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "403": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/users/{id}": {
+      "get": {
+        "tags": ["users"],
+        "summary": "Get user by ID",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/UserResponse" },
+          "404": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/roles": {
+      "get": {
+        "tags": ["roles"],
+        "summary": "List roles",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/RolesResponse" },
+          "403": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      },
+      "post": {
+        "tags": ["roles"],
+        "summary": "Create role",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateRoleRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "$ref": "#/components/responses/RoleResponse" },
+          "400": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/permissions": {
+      "get": {
+        "tags": ["permissions"],
+        "summary": "List permissions",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/PermissionsResponse" },
+          "403": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      },
+      "post": {
+        "tags": ["permissions"],
+        "summary": "Create permission",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreatePermissionRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "$ref": "#/components/responses/PermissionResponse" },
+          "400": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/products": {
+      "get": {
+        "tags": ["products"],
+        "summary": "List products",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/ProductsResponse" }
+        }
+      },
+      "post": {
+        "tags": ["products"],
+        "summary": "Create product",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateProductRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "$ref": "#/components/responses/ProductResponse" }
+        }
+      }
+    },
+    "/api/v1/inventory": {
+      "post": {
+        "tags": ["inventory"],
+        "summary": "Create inventory",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateInventoryRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "$ref": "#/components/responses/InventoryResponse" }
+        }
+      }
+    },
+    "/api/v1/inventory/{id}/adjust": {
+      "patch": {
+        "tags": ["inventory"],
+        "summary": "Adjust inventory quantity",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AdjustInventoryRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/BaseResponse" }
+        }
+      }
+    },
+    "/api/v1/inventory/product/{product_id}": {
+      "get": {
+        "tags": ["inventory"],
+        "summary": "List inventory by product",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "product_id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/InventoriesResponse" }
+        }
+      }
+    },
+    "/api/v1/audit/logs": {
+      "get": {
+        "tags": ["audit"],
+        "summary": "List audit logs",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "actor_id", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/AuditLogsResponse" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "responses": {
+      "BaseResponse": {
+        "description": "Base response",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/BaseResponse" }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "description": "Error response",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "AuthResponse": {
+        "description": "Auth response",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/AuthResponse" }
+          }
+        }
+      },
+      "UserResponse": {
+        "description": "User response",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/UserResponse" }
+          }
+        }
+      },
+      "RoleResponse": {
+        "description": "Role response",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/RoleResponse" }
+          }
+        }
+      },
+      "PermissionResponse": {
+        "description": "Permission response",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/PermissionResponse" }
+          }
+        }
+      },
+      "ProductResponse": {
+        "description": "Product response",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ProductResponse" }
+          }
+        }
+      },
+      "InventoryResponse": {
+        "description": "Inventory response",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/InventoryResponse" }
+          }
+        }
+      },
+      "RolesResponse": {
+        "description": "Roles response",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/RolesResponse" }
+          }
+        }
+      },
+      "PermissionsResponse": {
+        "description": "Permissions response",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/PermissionsResponse" }
+          }
+        }
+      },
+      "ProductsResponse": {
+        "description": "Products response",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ProductsResponse" }
+          }
+        }
+      },
+      "InventoriesResponse": {
+        "description": "Inventories response",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/InventoriesResponse" }
+          }
+        }
+      },
+      "AuditLogsResponse": {
+        "description": "Audit logs response",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/AuditLogsResponse" }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "BaseResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": { "nullable": true }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "message": { "type": "string" }
+        }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/AuthData" }
+        }
+      },
+      "AuthData": {
+        "type": "object",
+        "properties": {
+          "access_token": { "type": "string" },
+          "access_expires_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string" },
+          "password": { "type": "string" },
+          "name": { "type": "string" }
+        },
+        "required": ["email", "password", "name"]
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string" },
+          "password": { "type": "string" }
+        },
+        "required": ["email", "password"]
+      },
+      "CreateUserRequest": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string" },
+          "password": { "type": "string" },
+          "name": { "type": "string" },
+          "roles": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["email", "password", "name"]
+      },
+      "CreateRoleRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "permissions": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["name"]
+      },
+      "CreatePermissionRequest": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string" },
+          "description": { "type": "string" }
+        },
+        "required": ["code"]
+      },
+      "CreateProductRequest": {
+        "type": "object",
+        "properties": {
+          "sku": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "price": { "type": "number" }
+        },
+        "required": ["sku", "name", "price"]
+      },
+      "CreateInventoryRequest": {
+        "type": "object",
+        "properties": {
+          "product_id": { "type": "string" },
+          "quantity": { "type": "integer" },
+          "location": { "type": "string" }
+        },
+        "required": ["product_id", "quantity"]
+      },
+      "AdjustInventoryRequest": {
+        "type": "object",
+        "properties": {
+          "delta": { "type": "integer" }
+        },
+        "required": ["delta"]
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "email": { "type": "string" },
+          "name": { "type": "string" },
+          "roles": { "type": "array", "items": { "type": "string" } },
+          "permissions": { "type": "array", "items": { "type": "string" } },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "deleted_at": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "Role": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "permissions": { "type": "array", "items": { "type": "string" } },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "deleted_at": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "Permission": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "code": { "type": "string" },
+          "description": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "deleted_at": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "sku": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "price": { "type": "number" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "deleted_at": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "Inventory": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "product_id": { "type": "string" },
+          "quantity": { "type": "integer" },
+          "location": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" },
+          "deleted_at": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "AuditLog": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "actor_id": { "type": "string" },
+          "action": { "type": "string" },
+          "resource": { "type": "string" },
+          "metadata": { "type": "object" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/User" }
+        }
+      },
+      "RoleResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/Role" }
+        }
+      },
+      "PermissionResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/Permission" }
+        }
+      },
+      "ProductResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/Product" }
+        }
+      },
+      "InventoryResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/Inventory" }
+        }
+      },
+      "RolesResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Role" }
+          }
+        }
+      },
+      "PermissionsResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Permission" }
+          }
+        }
+      },
+      "ProductsResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Product" }
+          }
+        }
+      },
+      "InventoriesResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Inventory" }
+          }
+        }
+      },
+      "AuditLogsResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AuditLog" }
+          }
+        }
+      }
+    }
+  }
+}

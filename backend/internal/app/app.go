@@ -14,6 +14,7 @@ import (
 	usecaseaudit "backend/internal/usecase/audit"
 	usecaseauth "backend/internal/usecase/auth"
 	usecaseinventory "backend/internal/usecase/inventory"
+	usecaselocation "backend/internal/usecase/location"
 	usecasepermission "backend/internal/usecase/permission"
 	usecaseproduct "backend/internal/usecase/product"
 	usecaserole "backend/internal/usecase/role"
@@ -45,24 +46,39 @@ func Run(ctx context.Context) error {
 	permissionRepo := postgres.NewPermissionRepository(db)
 	inventoryRepo := postgres.NewInventoryRepository(db)
 	auditRepo := postgres.NewAuditRepository(db)
+	locationRepo := postgres.NewLocationRepository(db)
 
 	userUC := usecaseuser.NewService(userRepo)
 	authUC := usecaseauth.NewService(userRepo, cfg.AccessTTL, cfg.RefreshTTL, cfg.JWTAccessSecret, cfg.JWTRefreshSecret)
 	productUC := usecaseproduct.NewService(productRepo)
 	roleUC := usecaserole.NewService(roleRepo)
 	permissionUC := usecasepermission.NewService(permissionRepo)
-	inventoryUC := usecaseinventory.NewService(inventoryRepo)
+	inventoryUC := usecaseinventory.NewService(inventoryRepo, locationRepo)
 	auditUC := usecaseaudit.NewService(auditRepo)
+	locationUC := usecaselocation.NewService(locationRepo)
 
-	authHandler := handler.NewAuthHandler(authUC)
+	authHandler := handler.NewAuthHandler(authUC, cfg.CookieSecure)
 	userHandler := handler.NewUserHandler(userUC)
 	productHandler := handler.NewProductHandler(productUC)
 	roleHandler := handler.NewRoleHandler(roleUC)
 	permissionHandler := handler.NewPermissionHandler(permissionUC)
 	inventoryHandler := handler.NewInventoryHandler(inventoryUC)
 	auditHandler := handler.NewAuditHandler(auditUC)
+	locationHandler := handler.NewLocationHandler(locationUC)
 
-	engine := router.Build(logg, authUC, authHandler, userHandler, productHandler, roleHandler, permissionHandler, inventoryHandler, auditHandler)
+	engine := router.Build(
+		logg,
+		authUC,
+		authHandler,
+		userHandler,
+		productHandler,
+		roleHandler,
+		permissionHandler,
+		inventoryHandler,
+		auditHandler,
+		locationHandler,
+		cfg.CorsOriginList(),
+	)
 
 	srv := &http.Server{
 		Addr:              cfg.MustPort(),

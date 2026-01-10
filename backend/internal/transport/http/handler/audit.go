@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"backend/internal/transport/http/middleware"
 	usecaseaudit "backend/internal/usecase/audit"
 )
 
@@ -18,7 +19,7 @@ func NewAuditHandler(uc *usecaseaudit.Service) *AuditHandler {
 }
 
 func (h *AuditHandler) RegisterRoutes(rg *gin.RouterGroup) {
-	rg.GET("/audit/logs", h.list)
+	rg.GET("/audit/logs", middleware.RequirePermission("audit.read"), h.list)
 }
 
 func (h *AuditHandler) list(c *gin.Context) {

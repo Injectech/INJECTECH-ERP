@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 
 	"backend/internal/transport/http/handler"
@@ -22,11 +24,23 @@ func Build(
 	permissionHandler *handler.PermissionHandler,
 	inventoryHandler *handler.InventoryHandler,
 	auditHandler *handler.AuditHandler,
+	locationHandler *handler.LocationHandler,
+	corsOrigins []string,
 ) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(requestLogger(log))
+	r.Use(middleware.CORS(corsOrigins))
+
+	// Swagger UI (served from docs/swagger.json)
+	r.StaticFile("/swagger.json", "docs/swagger.json")
+	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.URL("/swagger.json")))
+
+	// Preflight handler for CORS
+	r.OPTIONS("/*path", func(c *gin.Context) {
+		c.Status(http.StatusNoContent)
+	})
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"success": true, "message": "ok"})
@@ -43,6 +57,7 @@ func Build(
 	permissionHandler.RegisterRoutes(secured)
 	inventoryHandler.RegisterRoutes(secured)
 	auditHandler.RegisterRoutes(secured)
+	locationHandler.RegisterRoutes(secured)
 
 	return r
 }

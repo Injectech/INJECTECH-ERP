@@ -3,14 +3,6 @@ import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
 import UserProfiles from "./pages/UserProfiles";
-import Videos from "./pages/UiElements/Videos";
-import Images from "./pages/UiElements/Images";
-import Alerts from "./pages/UiElements/Alerts";
-import Badges from "./pages/UiElements/Badges";
-import Avatars from "./pages/UiElements/Avatars";
-import Buttons from "./pages/UiElements/Buttons";
-import LineChart from "./pages/Charts/LineChart";
-import BarChart from "./pages/Charts/BarChart";
 import Calendar from "./pages/Calendar";
 import BasicTables from "./pages/Tables/BasicTables";
 import FormElements from "./pages/Forms/FormElements";
@@ -18,6 +10,21 @@ import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
+import Users from "./pages/Master/Users";
+import Roles from "./pages/Master/Roles";
+import Permissions from "./pages/Master/Permissions";
+import Locations from "./pages/Master/Locations";
+import Products from "./pages/Inventory/Products";
+import Inventory from "./pages/Inventory/Inventory";
+import AuditLogs from "./pages/Settings/AuditLogs";
+import ProtectedRoute from "./components/common/ProtectedRoute";
+import AdminRoute from "./components/common/AdminRoute";
+
+const ProtectedLayout = () => (
+  <ProtectedRoute>
+    <AppLayout />
+  </ProtectedRoute>
+);
 
 export default function App() {
   return (
@@ -26,7 +33,7 @@ export default function App() {
         <ScrollToTop />
         <Routes>
           {/* Dashboard Layout */}
-          <Route element={<AppLayout />}>
+          <Route element={<ProtectedLayout />}>
             <Route index path="/" element={<Home />} />
 
             {/* Others Page */}
@@ -40,17 +47,43 @@ export default function App() {
             {/* Tables */}
             <Route path="/basic-tables" element={<BasicTables />} />
 
-            {/* Ui Elements */}
-            <Route path="/alerts" element={<Alerts />} />
-            <Route path="/avatars" element={<Avatars />} />
-            <Route path="/badge" element={<Badges />} />
-            <Route path="/buttons" element={<Buttons />} />
-            <Route path="/images" element={<Images />} />
-            <Route path="/videos" element={<Videos />} />
+            {/* Master */}
+            <Route
+              path="/master/users"
+              element={
+                <AdminRoute>
+                  <Users />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/master/roles"
+              element={
+                <AdminRoute>
+                  <Roles />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/master/permissions"
+              element={
+                <AdminRoute>
+                  <Permissions />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/master/locations"
+              element={
+                <AdminRoute>
+                  <Locations />
+                </AdminRoute>
+              }
+            />
+            <Route path="/inventory/products" element={<Products />} />
+            <Route path="/inventory/inventory" element={<Inventory />} />
+            <Route path="/settings/audit-logs" element={<AuditLogs />} />
 
-            {/* Charts */}
-            <Route path="/line-chart" element={<LineChart />} />
-            <Route path="/bar-chart" element={<BarChart />} />
           </Route>
 
           {/* Auth Layout */}

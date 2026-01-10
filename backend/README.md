@@ -25,15 +25,37 @@ Clean Architecture scaffold for ERP with Gin, PostgreSQL, sqlc, Viper, Zap, JWT 
 ## Running (dev)
 ```bash
 cd backend
-# install deps
-# go mod tidy
+go mod tidy
+# generate sqlc (optional, requires sqlc installed)
+# sqlc generate
 
 export DATABASE_URL="postgres://user:pass@localhost:5432/erp?sslmode=disable"
 export JWT_ACCESS_SECRET="changeme-access"
 export JWT_REFRESH_SECRET="changeme-refresh"
+export CORS_ORIGINS="http://localhost:5173"
+export COOKIE_SECURE="false"
+
+# run migrations (example)
+# migrate -path migrations -database "$DATABASE_URL" up
 
 HTTP_PORT=8080 go run cmd/server/main.go
 ```
+
+## Configuration
+Environment variables (all optional):
+- `APP_NAME` (default: `erp-backend`)
+- `APP_ENV` (default: `development`)
+- `HTTP_PORT` (default: `8080`)
+- `HTTP_READ_TIMEOUT` (default: `5s`)
+- `HTTP_WRITE_TIMEOUT` (default: `10s`)
+- `SHUTDOWN_TIMEOUT` (default: `10s`)
+- `DATABASE_URL` (required for DB connection)
+- `JWT_ACCESS_SECRET` (required for auth)
+- `JWT_REFRESH_SECRET` (required for auth)
+- `JWT_ACCESS_TTL` (default: `15m`)
+- `JWT_REFRESH_TTL` (default: `168h`)
+- `CORS_ORIGINS` (default: `http://localhost:5173`)
+- `COOKIE_SECURE` (default: `false`)
 
 ## API Sketch
 - `POST /api/v1/auth/register|login|refresh`
@@ -45,10 +67,10 @@ HTTP_PORT=8080 go run cmd/server/main.go
   - `POST /api/v1/products`, `GET /api/v1/products`
   - `POST /api/v1/inventory`, `PATCH /api/v1/inventory/:id/adjust`, `GET /api/v1/inventory/product/:product_id`
   - `GET /api/v1/audit/logs?actor_id=:actor`
+  - Swagger UI: `GET /docs/index.html` (uses `docs/swagger.json`)
 
 ## Next Steps
-1. Generate SQLC code (schema + queries) into `internal/infrastructure/repository/postgres/sqlc` and implement repository methods.
-2. Enforce RBAC permission checks in middleware and on routes; populate permissions per role.
-3. Write migrations with golang-migrate for users/roles/permissions/products/inventory/audit tables (UUID PKs, audit fields, soft delete).
-4. Add Swagger docs via swaggo annotations under handlers and generate to `docs/`.
-5. Add unit tests for use cases and integration tests for repositories (70%+ coverage target).
+1. Replace manual sqlc stubs with generated code (`sqlc generate`) and hook up to real DB tests.
+2. Add integration tests for repositories against a test database + migrations; extend unit tests coverage across use cases.
+3. Add Swagger annotations in handlers and regenerate `docs/swagger.json` with swaggo CLI.
+4. Implement refresh-token persistence/blacklist beyond in-memory and add rate limiting for auth endpoints.

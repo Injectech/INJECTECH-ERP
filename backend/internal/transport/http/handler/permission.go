@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"backend/internal/transport/http/middleware"
 	usecasepermission "backend/internal/usecase/permission"
 )
 
@@ -18,8 +19,8 @@ func NewPermissionHandler(uc *usecasepermission.Service) *PermissionHandler {
 }
 
 func (h *PermissionHandler) RegisterRoutes(rg *gin.RouterGroup) {
-	rg.POST("/permissions", h.create)
-	rg.GET("/permissions", h.list)
+	rg.POST("/permissions", middleware.RequirePermission("permission.write"), h.create)
+	rg.GET("/permissions", middleware.RequirePermission("permission.read"), h.list)
 }
 
 func (h *PermissionHandler) create(c *gin.Context) {

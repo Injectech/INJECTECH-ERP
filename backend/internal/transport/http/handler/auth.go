@@ -6,16 +6,18 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	domainuser "backend/internal/domain/user"
 	usecaseauth "backend/internal/usecase/auth"
 )
 
 // AuthHandler exposes authentication endpoints.
 type AuthHandler struct {
 	authUC *usecaseauth.Service
+	secure bool
 }
 
-func NewAuthHandler(authUC *usecaseauth.Service) *AuthHandler {
-	return &AuthHandler{authUC: authUC}
+func NewAuthHandler(authUC *usecaseauth.Service, secure bool) *AuthHandler {
+	return &AuthHandler{authUC: authUC, secure: secure}
 }
 
 func (h *AuthHandler) RegisterRoutes(rg *gin.RouterGroup) {
@@ -35,14 +37,22 @@ func (h *AuthHandler) register(c *gin.Context) {
 		return
 	}
 
-	tokens, err := h.authUC.Register(c.Request.Context(), req.Email, req.Password, req.Name)
+	session, err := h.authUC.Register(c.Request.Context(), req.Email, req.Password, req.Name)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": err.Error()})
 		return
 	}
 
-	setRefreshCookie(c, tokens.RefreshToken, tokens.RefreshExp)
-	c.JSON(http.StatusCreated, gin.H{"success": true, "message": "registered", "data": gin.H{"access_token": tokens.AccessToken, "access_expires_at": tokens.AccessExp}})
+	setRefreshCookie(c, session.Tokens.RefreshToken, session.Tokens.RefreshExp, h.secure)
+	c.JSON(http.StatusCreated, gin.H{
+		"success": true,
+		"message": "registered",
+		"data": gin.H{
+			"access_token":      session.Tokens.AccessToken,
+			"access_expires_at": session.Tokens.AccessExp,
+			"user":              userResponse(session.User),
+		},
+	})
 }
 
 func (h *AuthHandler) login(c *gin.Context) {
@@ -55,14 +65,23 @@ func (h *AuthHandler) login(c *gin.Context) {
 		return
 	}
 
-	tokens, err := h.authUC.Login(c.Request.Context(), req.Email, req.Password)
+	session, err := h.authUC.Login(c.Request.Context(), req.Email, req.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "message": err.Error()})
+		status := http.StatusUnauthorized
+		c.JSON(status, gin.H{"success": false, "message": err.Error()})
 		return
 	}
 
-	setRefreshCookie(c, tokens.RefreshToken, tokens.RefreshExp)
-	c.JSON(http.StatusOK, gin.H{"success": true, "message": "success", "data": gin.H{"access_token": tokens.AccessToken, "access_expires_at": tokens.AccessExp}})
+	setRefreshCookie(c, session.Tokens.RefreshToken, session.Tokens.RefreshExp, h.secure)
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "success",
+		"data": gin.H{
+			"access_token":      session.Tokens.AccessToken,
+			"access_expires_at": session.Tokens.AccessExp,
+			"user":              userResponse(session.User),
+		},
+	})
 }
 
 func (h *AuthHandler) refresh(c *gin.Context) {
@@ -76,14 +95,30 @@ func (h *AuthHandler) refresh(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "message": err.Error()})
 		return
 	}
-	setRefreshCookie(c, tokens.RefreshToken, tokens.RefreshExp)
+	setRefreshCookie(c, tokens.RefreshToken, tokens.RefreshExp, h.secure)
 	c.JSON(http.StatusOK, gin.H{"success": true, "message": "success", "data": gin.H{"access_token": tokens.AccessToken, "access_expires_at": tokens.AccessExp}})
 }
 
-func setRefreshCookie(c *gin.Context, token string, exp time.Time) {
+func setRefreshCookie(c *gin.Context, token string, exp time.Time, secure bool) {
 	maxAge := int(time.Until(exp).Seconds())
 	if maxAge < 0 {
 		maxAge = 0
 	}
-	c.SetCookie("refresh_token", token, maxAge, "/", "", true, true)
+	c.SetCookie("refresh_token", token, maxAge, "/", "", secure, true)
+}
+
+type authUser struct {
+	ID    string   `json:"id"`
+	Name  string   `json:"name"`
+	Email string   `json:"email"`
+	Roles []string `json:"roles"`
+}
+
+func userResponse(u domainuser.User) authUser {
+	return authUser{
+		ID:    u.ID,
+		Name:  u.Name,
+		Email: u.Email,
+		Roles: u.Roles,
+	}
 }

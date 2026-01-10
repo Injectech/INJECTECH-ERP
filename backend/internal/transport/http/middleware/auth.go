@@ -12,6 +12,7 @@ import (
 const (
 	ContextUserID = "user_id"
 	ContextRoles  = "roles"
+	ContextPerms  = "perms"
 )
 
 // Auth middleware validates JWT access token and populates context.
@@ -34,6 +35,7 @@ func Auth(authUC *usecaseauth.Service) gin.HandlerFunc {
 		}
 		c.Set(ContextUserID, claims.Subject)
 		c.Set(ContextRoles, claims.Roles)
+		c.Set(ContextPerms, claims.Permissions)
 		c.Next()
 	}
 }
@@ -41,18 +43,18 @@ func Auth(authUC *usecaseauth.Service) gin.HandlerFunc {
 // RequirePermission enforces RBAC at handler-level.
 func RequirePermission(code string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		val, exists := c.Get(ContextRoles)
+		val, exists := c.Get(ContextPerms)
 		if !exists {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"success": false, "message": "missing roles"})
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"success": false, "message": "missing permissions"})
 			return
 		}
-		roles, ok := val.([]string)
+		perms, ok := val.([]string)
 		if !ok {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"success": false, "message": "invalid roles context"})
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"success": false, "message": "invalid permissions context"})
 			return
 		}
-		for _, r := range roles {
-			if r == code {
+		for _, p := range perms {
+			if p == code {
 				c.Next()
 				return
 			}

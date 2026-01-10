@@ -1,0 +1,17 @@
+version: "2"
+sql:
+  - schema: ["migrations/001_init.up.sql"]
+    queries: ["internal/infrastructure/repository/postgres/sqlc/queries/*.sql"]
+    engine: postgresql
+    gen:
+      go:
+        package: "sqlc"
+        out: "internal/infrastructure/repository/postgres/sqlc"
+        sql_package: "pgx/v5"
+        emit_prepared_queries: false
+        emit_interface: false
+        overrides:
+          - db_type: "uuid"
+            go_type: "github.com/google/uuid.UUID"
+          - db_type: "jsonb"
+            go_type: "map[string]any"
